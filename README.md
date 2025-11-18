@@ -1,4 +1,4 @@
-# RC Vehicle Control System - Modular Version 2.2
+# RC Vehicle Control System - Version 3.0 with PS4 Controller Support
 
 ## 📦 File Structure
 
@@ -6,14 +6,14 @@ Your sketch folder should contain these files:
 
 ```
 RC_Vehicle_Main/
-├── RC_Vehicle_Main.ino          ← Main sketch (setup & loop)
-├── Motor_Control.ino             ← BLDC motor with acceleration tuning
-├── Steering_Control.ino          ← Servo steering control
-├── Winch_Control.ino             ← Winch motor control
-├── Battery_Monitor.ino           ← Non-blocking battery monitoring
-├── Connection_Handler.ino        ← PS3 connection & animation
-├── Emergency_Stop.ino            ← Safety stop function
-└── Model_Variables.h             ← Vehicle-specific configuration
+├── RC_Vehicle_Brushless_Motor.ino  ← Main sketch (setup & loop)
+├── Motor_Control.ino               ← BLDC motor with acceleration tuning
+├── Steering_Control.ino            ← Servo steering control
+├── Winch_Control.ino               ← Winch motor control
+├── Battery_Monitor.ino             ← Non-blocking battery monitoring
+├── Connection_Handler.ino          ← PS4 connection & animation
+├── Emergency_Stop.ino              ← Safety stop function
+└── Model_Variables.h               ← Vehicle-specific configuration
 ```
 
 **IMPORTANT:** The main sketch file MUST have the same name as the folder!
@@ -81,13 +81,27 @@ Open **Model_Variables.h**:
    }
    ```
 
-### Step 4: Set PS3 MAC Address
-Open **RC_Vehicle_Main.ino**, find line ~12:
+### Step 4: Install PS4Controller Library
+1. Open Arduino IDE
+2. Go to **Sketch → Include Library → Manage Libraries**
+3. Search for "PS4Controller" or "PS4_Controller_Host"
+4. Install the library by **pablomarquez76**
+5. Alternatively, download from: https://github.com/pablomarquez76/PS4_Controller_Host
+
+### Step 5: Set PS4 MAC Address
+Open **RC_Vehicle_Brushless_Motor.ino**, find line ~17:
 ```cpp
-#define PS3_MAC_ADDRESS "b8:27:eb:37:85:b9"  // ← Change this
+#define PS4_MAC_ADDRESS "01:02:03:04:05:06"  // ← Change to your controller MAC
 ```
 
-### Step 5: Upload
+**Note:** You can also use `PS4.begin()` without a MAC address to connect to any PS4 controller.
+
+### Step 6: Pair PS4 Controller
+1. **Method 1 (No MAC needed):** Simply use `PS4.begin()` in code and press PS button
+2. **Method 2 (Specific MAC):** Use SixaxisPairTool to pair controller with ESP32's MAC
+3. Find ESP32 MAC: Add `Serial.println(WiFi.macAddress());` to setup()
+
+### Step 7: Upload
 1. Connect ESP32
 2. Select correct board and port
 3. Click Upload
@@ -164,7 +178,7 @@ Open **RC_Vehicle_Main.ino**, find line ~12:
 
 ---
 
-## 🎮 Control Layout
+## 🎮 PS4 Controller Layout
 
 ### Left Stick (Motor Control)
 - **Forward** = Push up (negative values)
@@ -181,15 +195,16 @@ Open **RC_Vehicle_Main.ino**, find line ~12:
 - **Center** = Straight
 
 ### D-Pad (Winch)
-- **Up** = Unwind cable
-- **Down** = Rewind cable
-- Analog pressure sensitive (gentle press = slow)
+- **Up** = Unwind cable (fixed speed)
+- **Down** = Rewind cable (fixed speed)
+- **Note:** PS4 D-pad buttons are digital (on/off), unlike PS3's analog pressure
 
-### Controller LEDs (Battery Level)
-- **4 LEDs** = Full (>8.0V)
-- **3 LEDs** = Good (>7.3V)
-- **2 LEDs** = Low (>6.7V)
-- **1 LED** = Critical (>6.5V) + rumble warning
+### Lightbar (Battery Level)
+- **Green** = Full charge (>8.0V)
+- **Blue** = Good charge (>7.3V)
+- **Yellow** = Low charge (>6.7V)
+- **Red** = Very low (>6.5V) + rumble warning
+- **Flashing Red** = Critical (<6.5V) - emergency stop
 
 ---
 
@@ -214,14 +229,16 @@ Open **RC_Vehicle_Main.ino**, find line ~12:
 ### Battery_Monitor.ino
 - Non-blocking circular buffer sampling
 - 50Hz ADC sampling, 1Hz display
-- LED indicators on controller
+- RGB lightbar indicators on PS4 controller
+- Color-coded battery status (Green/Blue/Yellow/Red)
 - Rumble warning at low voltage
 - Emergency stop at critical voltage
 
 ### Connection_Handler.ino
-- Auto-connect on PS button press
+- Auto-connect on PS button press (PS4 controller)
 - Welcome animation (steering wiggle)
 - Non-blocking animation
+- Works with PS4 wireless Bluetooth connection
 
 ### Emergency_Stop.ino
 - Stops all motors immediately
@@ -236,15 +253,15 @@ Open **RC_Vehicle_Main.ino**, find line ~12:
 Normal operation:
 ```
 ╔════════════════════════════════════════╗
-║  RC Vehicle Control System v2.2        ║
-║  Modular Design                        ║
+║  RC Vehicle Control System v3.0        ║
+║  PS4 Controller Support                ║
 ╚════════════════════════════════════════╝
 
 Vehicle: Sakura
 Motor Tuning - Accel: 0.15, Decel: 0.10, Boost: 33
 
 Initializing watchdog timer...
-Initializing PS3 controller... OK
+Initializing PS4 controller... OK
 Configuring battery monitor...
 Configuring winch...
 Configuring steering...
@@ -252,13 +269,13 @@ Configuring motor ESC...
 Centering steering...
 
 ✓ Initialization complete
-Waiting for PS3 controller...
+Waiting for PS4 controller...
 
 ╔════════════════════════════════════╗
-║  PS3 CONTROLLER CONNECTED!         ║
+║  PS4 CONTROLLER CONNECTED!         ║
 ╚════════════════════════════════════╝
 
-✓✓✓ PS3 Controller is CONNECTED and ACTIVE! ✓✓✓
+✓✓✓ PS4 Controller is CONNECTED and ACTIVE! ✓✓✓
 
 Motor: Joy=-80 Target=5500 Speed=5450
 🔋 Battery: 7.85V ███░ (Good)

@@ -78,37 +78,46 @@ void updateBatteryStatus() {
 // Update Battery LED Indicators
 //------------------------------------------------------------------------------
 void updateBatteryLEDs(float voltage) {
-  
-  uint8_t pattern;
-  
+
   if (voltage > 8.0) {
-    // Full charge - 4 LEDs
-    pattern = LED_PATTERN_FULL;
+    // Full charge - Green LED
+    if (PS4.isConnected()) {
+      PS4.setLed(0, 255, 0);  // Green
+      PS4.sendToController();
+    }
     rumbleCounter = 0;
-  } 
-  else if (voltage > 7.3) {
-    // Good charge - 3 LEDs
-    pattern = LED_PATTERN_GOOD;
-    rumbleCounter = 0;
-  } 
-  else if (voltage > 6.7) {
-    // Low charge - 2 LEDs
-    pattern = LED_PATTERN_LOW;
-    rumbleCounter = 0;
-  } 
-  else if (voltage > 6.5) {
-    // Very low - 1 LED + rumble warning
-    pattern = LED_PATTERN_CRITICAL;
-    handleLowBatteryRumble();
-  } 
-  else {
-    // Critical - 1 LED (emergency stop will be triggered by main loop)
-    pattern = LED_PATTERN_CRITICAL;
   }
-  
-  // Update PS3 controller LEDs
-  if (Ps3.isConnected()) {
-    Ps3.setPlayer(pattern);
+  else if (voltage > 7.3) {
+    // Good charge - Blue LED
+    if (PS4.isConnected()) {
+      PS4.setLed(0, 0, 255);  // Blue
+      PS4.sendToController();
+    }
+    rumbleCounter = 0;
+  }
+  else if (voltage > 6.7) {
+    // Low charge - Yellow LED
+    if (PS4.isConnected()) {
+      PS4.setLed(255, 255, 0);  // Yellow
+      PS4.sendToController();
+    }
+    rumbleCounter = 0;
+  }
+  else if (voltage > 6.5) {
+    // Very low - Red LED + rumble warning
+    if (PS4.isConnected()) {
+      PS4.setLed(255, 0, 0);  // Red
+      PS4.sendToController();
+    }
+    handleLowBatteryRumble();
+  }
+  else {
+    // Critical - Flashing Red (emergency stop will be triggered by main loop)
+    if (PS4.isConnected()) {
+      PS4.setLed(255, 0, 0);  // Red
+      PS4.setFlashRate(500, 500);  // Flash every 500ms
+      PS4.sendToController();
+    }
   }
 }
 
@@ -116,20 +125,19 @@ void updateBatteryLEDs(float voltage) {
 // Handle Low Battery Rumble Warning
 //------------------------------------------------------------------------------
 void handleLowBatteryRumble() {
-  
+
   const int RUMBLE_DELAY_SECONDS = 15;
-  
+
   if (rumbleCounter >= RUMBLE_DELAY_SECONDS) {
     // Rumble continuously to warn user
-    if (Ps3.isConnected()) {
-      ps3_cmd_t cmd = {};
-      cmd.rumble_left_intensity = 0x7d;   // Medium intensity
-      cmd.rumble_right_intensity = 0x7d;
-      cmd.rumble_right_duration = 100;    // 100ms pulse
-      cmd.rumble_left_duration = 100;
-      ps3Cmd(cmd);
+    if (PS4.isConnected()) {
+      PS4.setRumble(125, 125);  // Medium intensity on both motors
+      PS4.sendToController();
+      delay(100);  // 100ms pulse
+      PS4.setRumble(0, 0);  // Turn off
+      PS4.sendToController();
     }
-    
+
     // Keep rumbling at this level
     rumbleCounter = RUMBLE_DELAY_SECONDS;
   } else {

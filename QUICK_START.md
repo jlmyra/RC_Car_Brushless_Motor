@@ -1,10 +1,10 @@
-# QUICK START - Modular System
+# QUICK START - PS4 Controller Version
 
 ## 📥 Download All Files
 
-All modular files are in the **Modular** folder:
+All modular files should be in the same folder:
 
-1. RC_Vehicle_Main.ino
+1. RC_Vehicle_Brushless_Motor.ino
 2. Motor_Control.ino
 3. Steering_Control.ino
 4. Winch_Control.ino
@@ -17,19 +17,19 @@ All modular files are in the **Modular** folder:
 
 ## ⚡ 5-Minute Setup
 
-### 1. Create Folder
-Create a new folder: `RC_Vehicle_Main`
+### 1. Install PS4Controller Library
+- Open Arduino IDE → Sketch → Include Library → Manage Libraries
+- Search for "PS4_Controller_Host" by pablomarquez76
+- Click Install
+- Or download from: https://github.com/pablomarquez76/PS4_Controller_Host
 
-### 2. Copy All Files
-Copy all 8 files into that folder
-
-### 3. Configure
-**Model_Variables.h** - Line 13:
+### 2. Configure Your Vehicle
+**Model_Variables.h** - Line 14:
 ```cpp
-#define VEHICLE_SAKURA    // ← Your vehicle
+#define VEHICLE_JEEP    // ← Your vehicle
 ```
 
-**Model_Variables.h** - Lines 45-49:
+**Model_Variables.h** - Motor tuning:
 ```cpp
 .motor = {
   .accelFactor = 0.15,    // ← Start with these
@@ -38,15 +38,23 @@ Copy all 8 files into that folder
 }
 ```
 
-**RC_Vehicle_Main.ino** - Line 12:
+### 3. Set PS4 Controller MAC (Optional)
+**RC_Vehicle_Brushless_Motor.ino** - Line 17:
 ```cpp
-#define PS3_MAC_ADDRESS "b8:27:eb:37:85:b9"  // ← Your MAC
+#define PS4_MAC_ADDRESS "01:02:03:04:05:06"  // ← Your MAC
 ```
+**Or** use `PS4.begin()` without MAC to connect to any PS4 controller
 
 ### 4. Upload
-- Open `RC_Vehicle_Main.ino` in Arduino IDE
+- Open `RC_Vehicle_Brushless_Motor.ino` in Arduino IDE
+- Select ESP32 board and port
 - Click Upload
 - Open Serial Monitor (115200)
+
+### 5. Connect PS4 Controller
+- Press **PS button** on your PS4 controller
+- Watch Serial Monitor for "PS4 CONTROLLER CONNECTED!"
+- Green lightbar = ready to drive!
 
 ---
 
@@ -114,11 +122,12 @@ Upload, and all the right settings load automatically!
 
 ### ✅ All Your Features
 - Smooth motor control
-- Turbo mode (L1)
-- Steering
-- Winch
-- Battery monitoring
+- Turbo mode (L1 button)
+- Steering (right stick)
+- Winch (D-pad up/down)
+- Battery monitoring with color-coded lightbar
 - Emergency stop
+- PS4 wireless Bluetooth connection
 
 ---
 
@@ -175,15 +184,15 @@ Jeep:
 ## 📁 Folder Structure
 
 ```
-RC_Vehicle_Main/
-├── RC_Vehicle_Main.ino       ← Open this in Arduino
+RC_Car_Brushless_Motor/
+├── RC_Vehicle_Brushless_Motor.ino  ← Open this in Arduino
 ├── Motor_Control.ino
 ├── Steering_Control.ino
 ├── Winch_Control.ino
 ├── Battery_Monitor.ino
 ├── Connection_Handler.ino
 ├── Emergency_Stop.ino
-└── Model_Variables.h         ← Configure this
+└── Model_Variables.h               ← Configure this
 ```
 
 **Important:** Folder name MUST match main .ino filename!

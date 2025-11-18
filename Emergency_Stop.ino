@@ -25,21 +25,21 @@ void emergencyStop() {
   digitalWrite(winchPWMChannel_2, LOW);
   
   //----------------------------------------------------------------------------
-  // Visual Alert on PS3 Controller
+  // Visual Alert on PS4 Controller
   //----------------------------------------------------------------------------
-  if (Ps3.isConnected()) {
-    // Set to critical battery pattern (1 LED)
-    Ps3.setPlayer(LED_PATTERN_CRITICAL);
-    
+  if (PS4.isConnected()) {
+    // Set LED to red and flashing
+    PS4.setLed(255, 0, 0);  // Red
+    PS4.setFlashRate(250, 250);  // Fast flash
+
     // Triple rumble pulse for attention
     for (int i = 0; i < 3; i++) {
-      ps3_cmd_t cmd = {};
-      cmd.rumble_left_intensity = 0xFF;   // Maximum intensity
-      cmd.rumble_right_intensity = 0xFF;
-      cmd.rumble_right_duration = 50;     // 50ms pulse
-      cmd.rumble_left_duration = 50;
-      ps3Cmd(cmd);
-      delay(100);                          // 100ms between pulses
+      PS4.setRumble(255, 255);  // Maximum intensity on both motors
+      PS4.sendToController();
+      delay(50);  // 50ms pulse
+      PS4.setRumble(0, 0);  // Turn off
+      PS4.sendToController();
+      delay(100);  // 100ms between pulses
     }
   }
   

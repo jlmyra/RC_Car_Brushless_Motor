@@ -1,18 +1,18 @@
 //********************************************************************************
 //*** Connection Handler Component ***
-//*** PS3 controller connection/disconnection and welcome animation ***
+//*** PS4 controller connection/disconnection and welcome animation ***
 //********************************************************************************
 
 //------------------------------------------------------------------------------
 // Connection Event Handler
 //------------------------------------------------------------------------------
 void onConnection() {
-  
-  // This function is called automatically when PS3 controller connects
+
+  // This function is called automatically when PS4 controller connects
   Serial.println("\n╔════════════════════════════════════╗");
-  Serial.println("║  PS3 CONTROLLER CONNECTED!         ║");
+  Serial.println("║  PS4 CONTROLLER CONNECTED!         ║");
   Serial.println("╚════════════════════════════════════╝\n");
-  
+
   // Start connection welcome animation
   connState = CONN_LEFT;
   connAnimStartTime = millis();

@@ -4,24 +4,25 @@
 //********************************************************************************
 
 void handleSteering() {
-  
-  // Check if right stick has moved significantly
-  int stickChange = abs(Ps3.event.analog_changed.stick.rx);
-  
-  if (stickChange > 2) {  // Dead zone of 2 to avoid jitter
-    
-    // Read right stick X position
-    int x_position = Ps3.data.analog.stick.rx;
-    
+
+  // Read right stick X position from PS4 controller
+  int x_position = PS4.data.analog.stick.rx;
+
+  // Simple dead zone check to avoid jitter when stick is centered
+  static int lastSteerPos = 0;
+  if (abs(x_position - lastSteerPos) > 2) {  // Dead zone of 2 to avoid jitter
+
+    lastSteerPos = x_position;
+
     // Map joystick range (-128 to +128) to servo PWM range
     // Left stick (-128) → steerMin
     // Center (0) → centered position
     // Right stick (+128) → steerMax
     steerJoystickPos = map(x_position, -128, 128, steerMin, steerMax);
-    
+
     // Write PWM signal to steering servo
     ledcWrite(steerChannel, steerJoystickPos);
-    
+
     // Debug output
     Serial.print("Steering: ");
     Serial.print(x_position);

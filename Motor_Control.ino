@@ -4,17 +4,17 @@
 //********************************************************************************
 
 void BLDC_move() {
-  
+
   // Fixed time-step updates for consistent behavior
   unsigned long currentTime = millis();
   if (currentTime - lastUpdateTime < UPDATE_INTERVAL) {
     return; // Not time to update yet
   }
   lastUpdateTime = currentTime;
-  
-  // Read joystick input
-  leftJoystickPos = Ps3.data.analog.stick.ly;
-  bool turboMode = Ps3.data.button.l1;
+
+  // Read joystick input from PS4 controller
+  leftJoystickPos = PS4.data.analog.stick.ly;
+  bool turboMode = PS4.data.button.l1;
   
   // Determine target speed based on joystick position and mode
   if (leftJoystickPos <= -6) {

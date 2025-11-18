@@ -4,55 +4,62 @@
 //********************************************************************************
 
 void handleWinch() {
-  
+
   //------------------------------------------------------------------------------
   // UP Button - Unwind Winch
   //------------------------------------------------------------------------------
-  if (Ps3.event.analog_changed.button.up) {
-    
-    if (Ps3.data.analog.button.up > 0) {
-      // Button is pressed - activate winch in unwind direction
-      
-      // Set direction (channel 1 off, channel 2 active)
-      digitalWrite(winchPWMChannel_1, LOW);
-      
-      // Apply PWM speed control (analog button pressure 0-255)
-      // Multiplied by 0.8 to limit maximum speed for control
-      ledcWrite(winchPWMChannel_2, Ps3.data.analog.button.up * 0.8);
-      
-      Serial.print("Winch UNWIND: ");
-      Serial.println(Ps3.data.analog.button.up);
-      
-    } else {
-      // Button released - stop winch
-      digitalWrite(winchPWMChannel_1, LOW);
-      digitalWrite(winchPWMChannel_2, LOW);
+  if (PS4.data.button.up) {
+    // Button is pressed - activate winch in unwind direction
+
+    // Set direction (channel 1 off, channel 2 active)
+    ledcWrite(winchPWMChannel_1, 0);
+
+    // Apply PWM speed control at 80% speed for better control
+    ledcWrite(winchPWMChannel_2, 204);  // 255 * 0.8 = 204
+
+    static bool upButtonLogged = false;
+    if (!upButtonLogged) {
+      Serial.println("Winch UNWIND");
+      upButtonLogged = true;
     }
+  } else {
+    static bool upButtonLogged = false;
+    upButtonLogged = false;
   }
-  
+
   //------------------------------------------------------------------------------
   // DOWN Button - Rewind Winch
   //------------------------------------------------------------------------------
-  if (Ps3.event.analog_changed.button.down) {
-    
-    if (Ps3.data.analog.button.down > 0) {
-      // Button is pressed - activate winch in rewind direction
-      
-      // Set direction (channel 2 off, channel 1 active)
-      digitalWrite(winchPWMChannel_2, LOW);
-      
-      // Apply PWM speed control (analog button pressure 0-255)
-      // Multiplied by 0.8 to limit maximum speed for control
-      ledcWrite(winchPWMChannel_1, Ps3.data.analog.button.down * 0.8);
-      
-      Serial.print("Winch REWIND: ");
-      Serial.println(Ps3.data.analog.button.down);
-      
-    } else {
-      // Button released - stop winch
-      digitalWrite(winchPWMChannel_1, LOW);
-      digitalWrite(winchPWMChannel_2, LOW);
+  if (PS4.data.button.down) {
+    // Button is pressed - activate winch in rewind direction
+
+    // Set direction (channel 2 off, channel 1 active)
+    ledcWrite(winchPWMChannel_2, 0);
+
+    // Apply PWM speed control at 80% speed for better control
+    ledcWrite(winchPWMChannel_1, 204);  // 255 * 0.8 = 204
+
+    static bool downButtonLogged = false;
+    if (!downButtonLogged) {
+      Serial.println("Winch REWIND");
+      downButtonLogged = true;
     }
+  } else {
+    static bool downButtonLogged = false;
+    downButtonLogged = false;
+  }
+
+  // Stop winch if neither button is pressed
+  if (!PS4.data.button.up && !PS4.data.button.down) {
+    static bool wasStopped = false;
+    if (!wasStopped) {
+      ledcWrite(winchPWMChannel_1, 0);
+      ledcWrite(winchPWMChannel_2, 0);
+      wasStopped = true;
+    }
+  } else {
+    static bool wasStopped = false;
+    wasStopped = false;
   }
 }
 

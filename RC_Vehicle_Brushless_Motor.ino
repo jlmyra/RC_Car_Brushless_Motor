@@ -1,10 +1,10 @@
 //********************************************************************************
 //*** RC Vehicle Control System - Main Sketch ***
-//*** Version: 2.2 - Modular Design ***
+//*** Version: 3.0 - PS4 Controller Support ***
 //*** For: JEEP, LANDY, SAKURA- CARS WITH BRUSHLESS MOTORS ***
 //********************************************************************************
 
-#include <Ps3Controller.h>
+#include <PS4Controller.h>
 #include "esp_adc_cal.h"
 #include "esp_task_wdt.h"
 #include "Model_Variables.h"
@@ -14,7 +14,7 @@
 //*** CONFIGURATION ***
 //********************************************************************************
 
-#define PS3_MAC_ADDRESS "b8:27:eb:37:85:b9"  // ← Change to your controller MAC
+#define PS4_MAC_ADDRESS "01:02:03:04:05:06"  // ← Change to your controller MAC (or use PS4.begin() without MAC)
 
 //********************************************************************************
 //*** PIN DEFINITIONS ***
@@ -90,7 +90,7 @@ float vOutMax = 8.4 * R2 / (R1 + R2);
 float mSlope = 1 / (vOutMax / 8.4);
 
 // Connection Status
-bool ps3WasConnected = false;
+bool ps4WasConnected = false;
 unsigned long lastConnectionCheck = 0;
 
 // Connection Animation
@@ -118,31 +118,24 @@ unsigned long connAnimStartTime = 0;
 void setup() {
   Serial.begin(115200);
   Serial.println("\n\n╔════════════════════════════════════════╗");
-  Serial.println("║  RC Vehicle Control System v2.2        ║");
-  Serial.println("║  Modular Design                        ║");
+  Serial.println("║  RC Vehicle Control System v3.0        ║");
+  Serial.println("║  PS4 Controller Support                ║");
   Serial.println("╚════════════════════════════════════════╝");
   Serial.printf("\nVehicle: %s\n", VEHICLE.name);
-  Serial.printf("Motor Tuning - Accel: %.2f, Decel: %.2f, Boost: %d\n\n", 
+  Serial.printf("Motor Tuning - Accel: %.2f, Decel: %.2f, Boost: %d\n\n",
                 ACCEL_SMOOTH_FACTOR, DECEL_SMOOTH_FACTOR, bldcStartBoost);
-  
+
   // Initialize Watchdog Timer
   Serial.println("Initializing watchdog timer...");
   esp_task_wdt_init(3, true);
   esp_task_wdt_add(NULL);
-  
-  // Initialize PS3 Controller
-  Serial.print("Initializing PS3 controller...");
-  if (!Ps3.begin(PS3_MAC_ADDRESS)) {
-    Serial.println(" FAILED!");
-    Serial.println("⚠️  Check MAC address and try again");
-    while(1) { 
-      delay(1000); 
-      esp_task_wdt_reset();
-    }
-  }
+
+  // Initialize PS4 Controller
+  Serial.print("Initializing PS4 controller...");
+  PS4.begin(PS4_MAC_ADDRESS);  // or use PS4.begin() without MAC
   Serial.println(" OK");
-  
-  Ps3.attachOnConnect(onConnection);
+
+  PS4.attachOnConnect(onConnection);
   
   // Battery Setup
   Serial.println("Configuring battery monitor...");
@@ -183,7 +176,7 @@ void setup() {
   ledcWrite(steerChannel, steerMid);
   
   Serial.println("\n✓ Initialization complete");
-  Serial.println("Waiting for PS3 controller...");
+  Serial.println("Waiting for PS4 controller...");
   Serial.println("Press PS button on controller to connect\n");
 }
 
@@ -193,30 +186,30 @@ void setup() {
 
 void loop() {
   esp_task_wdt_reset();
-  
+
   // Check connection status every 100ms
   if (millis() - lastConnectionCheck > 100) {
     lastConnectionCheck = millis();
-    
-    bool currentlyConnected = Ps3.isConnected();
-    
+
+    bool currentlyConnected = PS4.isConnected();
+
     // Detect new connection
-    if (currentlyConnected && !ps3WasConnected) {
-      ps3WasConnected = true;
-      Serial.println("\n✓✓✓ PS3 Controller is CONNECTED and ACTIVE! ✓✓✓\n");
+    if (currentlyConnected && !ps4WasConnected) {
+      ps4WasConnected = true;
+      Serial.println("\n✓✓✓ PS4 Controller is CONNECTED and ACTIVE! ✓✓✓\n");
     }
-    
+
     // Detect disconnection
-    if (!currentlyConnected && ps3WasConnected) {
-      ps3WasConnected = false;
+    if (!currentlyConnected && ps4WasConnected) {
+      ps4WasConnected = false;
       Serial.println("\n⚠️  Controller DISCONNECTED\n");
       emergencyStop();
-      Serial.println("Waiting for PS3 controller...\n");
+      Serial.println("Waiting for PS4 controller...\n");
     }
   }
-  
+
   // Main operation when connected
-  if (ps3WasConnected) {
+  if (ps4WasConnected) {
     // Check for critical battery
     if (batteryVoltageCorr < 6.5 && batteryVoltageCorr > 0) {
       Serial.printf("🔋 CRITICAL BATTERY: %.2fV - STOPPING\n", batteryVoltageCorr);
@@ -224,10 +217,11 @@ void loop() {
       delay(5000);
       return;
     }
-    
+
     // Normal operation - call component functions
     handleSteering();
     BLDC_move();
+    handleWinch();
     computeBatteryVoltage();
     updateConnectionAnimation();
   } else {
