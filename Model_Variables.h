@@ -20,8 +20,9 @@
 //********************************************************************************
 
 struct ServoCalibration {
-  int min;    // Minimum PWM value (full left/right)
-  int max;    // Maximum PWM value (full right/left)
+  int min;           // Minimum PWM value (full left turn)
+  int max;           // Maximum PWM value (full right turn)
+  bool inverted;     // True if servo is mounted backwards
 };
 
 struct MotorTuning {
@@ -51,8 +52,9 @@ struct VehicleConfig {
   const VehicleConfig VEHICLE = {
     .name = "Sakura",
     .steering = {
-      .min = 6799,  // 2075μs (swapped to invert steering direction)
-      .max = 3604   // 1100μs (swapped to invert steering direction)
+      .min = 3604,     // 1100μs
+      .max = 6799,     // 2075μs
+      .inverted = true // Servo mounted backwards
     },
     .motor = {
       .accelFactor = 0.15,      // Moderate acceleration
@@ -67,8 +69,9 @@ struct VehicleConfig {
   };
 
   // Legacy defines for compatibility
-  #define MV_servoMin 6799
-  #define MV_servoMax 3604
+  #define MV_servoMin 3604
+  #define MV_servoMax 6799
+  #define MV_servoInverted true
   #define MV_R1 99500
   #define MV_R2 41600
   #define MV_batCorrFactor 0.0
@@ -78,8 +81,9 @@ struct VehicleConfig {
   const VehicleConfig VEHICLE = {
     .name = "Jeep",
     .steering = {
-      .min = 3604,  // 1100μs
-      .max = 6799   // 2075μs
+      .min = 3604,      // 1100μs
+      .max = 6799,      // 2075μs
+      .inverted = false // Normal steering direction
     },
     .motor = {
       .accelFactor = 0.20,      // Faster acceleration (heavier vehicle)
@@ -96,6 +100,7 @@ struct VehicleConfig {
   // Legacy defines for compatibility
   #define MV_servoMin 3604
   #define MV_servoMax 6799
+  #define MV_servoInverted false
   #define MV_R1 101600
   #define MV_R2 41600
   #define MV_batCorrFactor 0.0
@@ -105,8 +110,9 @@ struct VehicleConfig {
   const VehicleConfig VEHICLE = {
     .name = "Landy",
     .steering = {
-      .min = 3586,  // 1125μs
-      .max = 6708   // 1925μs
+      .min = 3586,      // 1125μs
+      .max = 6708,      // 1925μs
+      .inverted = false // Normal steering direction
     },
     .motor = {
       .accelFactor = 0.18,      // Medium-fast acceleration
@@ -123,6 +129,7 @@ struct VehicleConfig {
   // Legacy defines for compatibility
   #define MV_servoMin 3586
   #define MV_servoMax 6708
+  #define MV_servoInverted false
   #define MV_R1 102800
   #define MV_R2 41700
   #define MV_batCorrFactor 0.0
@@ -132,8 +139,9 @@ struct VehicleConfig {
   const VehicleConfig VEHICLE = {
     .name = "Buggy",
     .steering = {
-      .min = 4014,  // 1225μs
-      .max = 6635   // 2025μs
+      .min = 4014,      // 1225μs
+      .max = 6635,      // 2025μs
+      .inverted = false // Normal steering direction
     },
     .motor = {
       .accelFactor = 0.25,      // Fast acceleration (light, sporty)
@@ -150,6 +158,7 @@ struct VehicleConfig {
   // Legacy defines for compatibility
   #define MV_servoMin 4014
   #define MV_servoMax 6635
+  #define MV_servoInverted false
   #define MV_R1 101600
   #define MV_R2 41600
   #define MV_batCorrFactor 0.0
