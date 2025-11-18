@@ -92,7 +92,8 @@ struct VehicleConfig {
       .correctionFactor = 0.0
     }
   };
-  
+
+  // Legacy defines for compatibility
   #define MV_servoMin 3604
   #define MV_servoMax 6799
   #define MV_R1 101600
@@ -118,7 +119,8 @@ struct VehicleConfig {
       .correctionFactor = 0.0
     }
   };
-  
+
+  // Legacy defines for compatibility
   #define MV_servoMin 3586
   #define MV_servoMax 6708
   #define MV_R1 102800
@@ -144,12 +146,13 @@ struct VehicleConfig {
       .correctionFactor = 0.0
     }
   };
-  
+
+  // Legacy defines for compatibility
   #define MV_servoMin 4014
   #define MV_servoMax 6635
   #define MV_R1 101600
   #define MV_R2 41600
-  #define MV_batCorrFactor 0.00
+  #define MV_batCorrFactor 0.0
 #endif
 
 //********************************************************************************
