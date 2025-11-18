@@ -26,6 +26,7 @@ int steerChannel = 1;
 int steerMin = MV_servoMin;
 int steerMid = 4915;
 int steerMax = MV_servoMax;
+bool steerInverted = MV_servoInverted;
 int steerFreq = 50;
 int steerTimerWidth = 16;
 

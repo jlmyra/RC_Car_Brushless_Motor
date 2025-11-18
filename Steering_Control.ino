@@ -9,10 +9,15 @@ void handleSteering() {
   int stickChange = abs(Ps3.event.analog_changed.stick.rx);
   
   if (stickChange > 2) {  // Dead zone of 2 to avoid jitter
-    
+
     // Read right stick X position
     int x_position = Ps3.data.analog.stick.rx;
-    
+
+    // Invert direction if servo is mounted backwards
+    if (steerInverted) {
+      x_position = -x_position;
+    }
+
     // Map joystick range (-128 to +128) to servo PWM range
     // Left stick (-128) → steerMin
     // Center (0) → centered position
@@ -65,15 +70,18 @@ void handleSteering() {
  * If wheels turn right when centered:
  * - Decrease steerMin slightly
  * - Or increase steerMax slightly
- * 
+ *
  * If steering is inverted (left goes right):
- * - Swap steerMin and steerMax values
- * 
+ * - Set .inverted = true in the vehicle's steering configuration
+ * - This negates the joystick input before mapping to PWM
+ * - Much cleaner than swapping min/max values
+ *
  * Current Settings (from Model_Variables.h):
  * - steerMin = Vehicle-specific (left turn)
  * - steerMid = 4915 (center)
  * - steerMax = Vehicle-specific (right turn)
- * 
+ * - steerInverted = Vehicle-specific (true for backwards-mounted servos)
+ *
  * The dead zone of 2 prevents jitter from small joystick movements
  * when the stick is near center. Increase this value if you experience
  * twitchy steering when the joystick is barely touched.
