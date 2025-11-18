@@ -51,8 +51,8 @@ struct VehicleConfig {
   const VehicleConfig VEHICLE = {
     .name = "Sakura",
     .steering = {
-      .min = 3604,  // 1100μs
-      .max = 6799   // 2075μs
+      .min = 6799,  // 2075μs (swapped to invert steering direction)
+      .max = 3604   // 1100μs (swapped to invert steering direction)
     },
     .motor = {
       .accelFactor = 0.15,      // Moderate acceleration
@@ -65,10 +65,10 @@ struct VehicleConfig {
       .correctionFactor = 0.0
     }
   };
-  
+
   // Legacy defines for compatibility
-  #define MV_servoMin 3604
-  #define MV_servoMax 6799
+  #define MV_servoMin 6799
+  #define MV_servoMax 3604
   #define MV_R1 99500
   #define MV_R2 41600
   #define MV_batCorrFactor 0.0
