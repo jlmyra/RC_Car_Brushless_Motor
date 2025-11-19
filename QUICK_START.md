@@ -38,11 +38,6 @@ Copy all 8 files into that folder
 }
 ```
 
-**RC_Vehicle_Main.ino** - Line 12:
-```cpp
-#define PS3_MAC_ADDRESS "b8:27:eb:37:85:b9"  // ← Your MAC
-```
-
 ### 4. Upload
 - Open `RC_Vehicle_Main.ino` in Arduino IDE
 - Click Upload

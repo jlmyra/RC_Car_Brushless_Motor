@@ -4,14 +4,22 @@
 //********************************************************************************
 
 void handleSteering() {
-  
-  // Check if right stick has moved significantly
-  int stickChange = abs(Ps3.event.analog_changed.stick.rx);
-  
-  if (stickChange > 2) {  // Dead zone of 2 to avoid jitter
 
-    // Read right stick X position
-    int x_position = Ps3.data.analog.stick.rx;
+  // Skip if no controller connected
+  if (!myController || !myController->isConnected()) {
+    return;
+  }
+
+  // Read right stick X position from Bluepad32
+  // Note: Bluepad32 axis range is -511 to 512, we map to PS3 range -128 to 128
+  int x_position = map(myController->axisRX(), -512, 512, -128, 128);
+
+  // Track last position to detect changes
+  static int lastXPosition = 0;
+  int stickChange = abs(x_position - lastXPosition);
+
+  if (stickChange > 2) {  // Dead zone of 2 to avoid jitter
+    lastXPosition = x_position;
 
     // Invert direction if servo is mounted backwards
     if (steerInverted) {

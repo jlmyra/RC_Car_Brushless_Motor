@@ -4,7 +4,7 @@
 //*** For: JEEP, LANDY, SAKURA- CARS WITH BRUSHLESS MOTORS ***
 //********************************************************************************
 
-#include <Ps3Controller.h>
+#include <Bluepad32.h>
 #include "esp_adc_cal.h"
 #include "esp_task_wdt.h"
 #include "Model_Variables.h"
@@ -14,7 +14,7 @@
 //*** CONFIGURATION ***
 //********************************************************************************
 
-#define PS3_MAC_ADDRESS "b8:27:eb:37:85:b9"  // ← Change to your controller MAC
+// Bluepad32 handles Bluetooth pairing automatically - no MAC address needed!
 
 //********************************************************************************
 //*** PIN DEFINITIONS ***
@@ -90,8 +90,11 @@ int rumbleCounter = 0;
 float vOutMax = 8.4 * R2 / (R1 + R2);
 float mSlope = 1 / (vOutMax / 8.4);
 
+// Controller Reference
+ControllerPtr myController = nullptr;
+
 // Connection Status
-bool ps3WasConnected = false;
+bool controllerWasConnected = false;
 unsigned long lastConnectionCheck = 0;
 
 // Connection Animation
@@ -131,19 +134,12 @@ void setup() {
   esp_task_wdt_init(3, true);
   esp_task_wdt_add(NULL);
   
-  // Initialize PS3 Controller
-  Serial.print("Initializing PS3 controller...");
-  if (!Ps3.begin(PS3_MAC_ADDRESS)) {
-    Serial.println(" FAILED!");
-    Serial.println("⚠️  Check MAC address and try again");
-    while(1) { 
-      delay(1000); 
-      esp_task_wdt_reset();
-    }
-  }
-  Serial.println(" OK");
-  
-  Ps3.attachOnConnect(onConnection);
+  // Initialize Bluepad32
+  Serial.println("Initializing Bluepad32...");
+  BP32.setup(&onConnectedController, &onDisconnectedController);
+  BP32.forgetBluetoothKeys();  // Start fresh - allows any controller to pair
+  Serial.println("✓ Bluepad32 initialized");
+  Serial.println("Ready to pair with any Bluetooth controller");
   
   // Battery Setup
   Serial.println("Configuring battery monitor...");
@@ -184,8 +180,8 @@ void setup() {
   ledcWrite(steerChannel, steerMid);
   
   Serial.println("\n✓ Initialization complete");
-  Serial.println("Waiting for PS3 controller...");
-  Serial.println("Press PS button on controller to connect\n");
+  Serial.println("Waiting for Bluetooth controller...");
+  Serial.println("Put your controller in pairing mode to connect\n");
 }
 
 //********************************************************************************
@@ -194,30 +190,19 @@ void setup() {
 
 void loop() {
   esp_task_wdt_reset();
-  
-  // Check connection status every 100ms
-  if (millis() - lastConnectionCheck > 100) {
-    lastConnectionCheck = millis();
-    
-    bool currentlyConnected = Ps3.isConnected();
-    
+
+  // Update Bluepad32 - fetches latest controller data
+  bool dataUpdated = BP32.update();
+
+  // Check if we have a valid controller
+  if (myController && myController->isConnected()) {
+
     // Detect new connection
-    if (currentlyConnected && !ps3WasConnected) {
-      ps3WasConnected = true;
-      Serial.println("\n✓✓✓ PS3 Controller is CONNECTED and ACTIVE! ✓✓✓\n");
+    if (!controllerWasConnected) {
+      controllerWasConnected = true;
+      Serial.println("\n✓✓✓ Controller is CONNECTED and ACTIVE! ✓✓✓\n");
     }
-    
-    // Detect disconnection
-    if (!currentlyConnected && ps3WasConnected) {
-      ps3WasConnected = false;
-      Serial.println("\n⚠️  Controller DISCONNECTED\n");
-      emergencyStop();
-      Serial.println("Waiting for PS3 controller...\n");
-    }
-  }
-  
-  // Main operation when connected
-  if (ps3WasConnected) {
+
     // Check for critical battery
     if (batteryVoltageCorr < 6.5 && batteryVoltageCorr > 0) {
       Serial.printf("🔋 CRITICAL BATTERY: %.2fV - STOPPING\n", batteryVoltageCorr);
@@ -225,13 +210,22 @@ void loop() {
       delay(5000);
       return;
     }
-    
+
     // Normal operation - call component functions
     handleSteering();
     BLDC_move();
     computeBatteryVoltage();
     updateConnectionAnimation();
+
   } else {
+    // Detect disconnection
+    if (controllerWasConnected) {
+      controllerWasConnected = false;
+      Serial.println("\n⚠️  Controller DISCONNECTED\n");
+      emergencyStop();
+      Serial.println("Waiting for controller...\n");
+    }
+
     // Not connected - just wait
     delay(100);
   }

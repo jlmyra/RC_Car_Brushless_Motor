@@ -4,55 +4,51 @@
 //********************************************************************************
 
 void handleWinch() {
-  
+
+  // Skip if no controller connected
+  if (!myController || !myController->isConnected()) {
+    return;
+  }
+
+  // Read D-pad state from Bluepad32
+  // Bluepad32 D-pad values: 0x01=up, 0x02=down, 0x04=right, 0x08=left
+  uint8_t dpad = myController->dpad();
+
   //------------------------------------------------------------------------------
   // UP Button - Unwind Winch
   //------------------------------------------------------------------------------
-  if (Ps3.event.analog_changed.button.up) {
-    
-    if (Ps3.data.analog.button.up > 0) {
-      // Button is pressed - activate winch in unwind direction
-      
-      // Set direction (channel 1 off, channel 2 active)
-      digitalWrite(winchPWMChannel_1, LOW);
-      
-      // Apply PWM speed control (analog button pressure 0-255)
-      // Multiplied by 0.8 to limit maximum speed for control
-      ledcWrite(winchPWMChannel_2, Ps3.data.analog.button.up * 0.8);
-      
-      Serial.print("Winch UNWIND: ");
-      Serial.println(Ps3.data.analog.button.up);
-      
-    } else {
-      // Button released - stop winch
-      digitalWrite(winchPWMChannel_1, LOW);
-      digitalWrite(winchPWMChannel_2, LOW);
-    }
+  if (dpad & 0x01) {  // D-pad UP pressed
+    // Button is pressed - activate winch in unwind direction
+
+    // Set direction (channel 1 off, channel 2 active)
+    digitalWrite(winchPWMChannel_1, LOW);
+
+    // Apply PWM speed control at 80% maximum speed
+    // Note: Bluepad32 D-pad is digital (on/off), not analog pressure
+    ledcWrite(winchPWMChannel_2, 255 * 0.8);
+
+    Serial.println("Winch UNWIND");
+
   }
-  
   //------------------------------------------------------------------------------
   // DOWN Button - Rewind Winch
   //------------------------------------------------------------------------------
-  if (Ps3.event.analog_changed.button.down) {
-    
-    if (Ps3.data.analog.button.down > 0) {
-      // Button is pressed - activate winch in rewind direction
-      
-      // Set direction (channel 2 off, channel 1 active)
-      digitalWrite(winchPWMChannel_2, LOW);
-      
-      // Apply PWM speed control (analog button pressure 0-255)
-      // Multiplied by 0.8 to limit maximum speed for control
-      ledcWrite(winchPWMChannel_1, Ps3.data.analog.button.down * 0.8);
-      
-      Serial.print("Winch REWIND: ");
-      Serial.println(Ps3.data.analog.button.down);
-      
-    } else {
-      // Button released - stop winch
-      digitalWrite(winchPWMChannel_1, LOW);
-      digitalWrite(winchPWMChannel_2, LOW);
-    }
+  else if (dpad & 0x02) {  // D-pad DOWN pressed
+    // Button is pressed - activate winch in rewind direction
+
+    // Set direction (channel 2 off, channel 1 active)
+    digitalWrite(winchPWMChannel_2, LOW);
+
+    // Apply PWM speed control at 80% maximum speed
+    ledcWrite(winchPWMChannel_1, 255 * 0.8);
+
+    Serial.println("Winch REWIND");
+
+  }
+  else {
+    // No D-pad button pressed - stop winch
+    digitalWrite(winchPWMChannel_1, LOW);
+    digitalWrite(winchPWMChannel_2, LOW);
   }
 }
 
@@ -70,8 +66,8 @@ void handleWinch() {
  * Control Method:
  * - D-pad UP = Unwind winch (let out cable)
  * - D-pad DOWN = Rewind winch (pull in cable)
- * - Analog pressure sensitive (0-255)
- * - Speed limited to 80% for better control
+ * - Digital on/off control (Bluepad32 D-pad is not pressure sensitive)
+ * - Speed limited to 80% of maximum for better control
  * 
  * Safety Features:
  * - Opposite channel forced LOW before activating direction

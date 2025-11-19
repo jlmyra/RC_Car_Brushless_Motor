@@ -106,9 +106,9 @@ void updateBatteryLEDs(float voltage) {
     pattern = LED_PATTERN_CRITICAL;
   }
   
-  // Update PS3 controller LEDs
-  if (Ps3.isConnected()) {
-    Ps3.setPlayer(pattern);
+  // Update controller LEDs
+  if (myController && myController->isConnected()) {
+    myController->setPlayerLEDs(pattern);
   }
 }
 
@@ -121,15 +121,12 @@ void handleLowBatteryRumble() {
   
   if (rumbleCounter >= RUMBLE_DELAY_SECONDS) {
     // Rumble continuously to warn user
-    if (Ps3.isConnected()) {
-      ps3_cmd_t cmd = {};
-      cmd.rumble_left_intensity = 0x7d;   // Medium intensity
-      cmd.rumble_right_intensity = 0x7d;
-      cmd.rumble_right_duration = 100;    // 100ms pulse
-      cmd.rumble_left_duration = 100;
-      ps3Cmd(cmd);
+    if (myController && myController->isConnected()) {
+      // setRumble(force, duration)
+      // force: 0-255, duration: 0-255 (255 ≈ 2 seconds)
+      myController->setRumble(0x7d, 25);  // Medium intensity, short pulse
     }
-    
+
     // Keep rumbling at this level
     rumbleCounter = RUMBLE_DELAY_SECONDS;
   } else {

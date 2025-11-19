@@ -1,21 +1,43 @@
 //********************************************************************************
 //*** Connection Handler Component ***
-//*** PS3 controller connection/disconnection and welcome animation ***
+//*** Bluepad32 controller connection/disconnection and welcome animation ***
 //********************************************************************************
 
 //------------------------------------------------------------------------------
 // Connection Event Handler
 //------------------------------------------------------------------------------
-void onConnection() {
-  
-  // This function is called automatically when PS3 controller connects
+void onConnectedController(ControllerPtr ctl) {
+
+  // This function is called automatically when a controller connects
   Serial.println("\n╔════════════════════════════════════╗");
-  Serial.println("║  PS3 CONTROLLER CONNECTED!         ║");
+  Serial.println("║  CONTROLLER CONNECTED!             ║");
   Serial.println("╚════════════════════════════════════╝\n");
-  
+
+  // Store controller reference
+  myController = ctl;
+
+  // Print controller info
+  Serial.printf("Controller model: %s\n", ctl->getModelName().c_str());
+
   // Start connection welcome animation
   connState = CONN_LEFT;
   connAnimStartTime = millis();
+}
+
+//------------------------------------------------------------------------------
+// Disconnection Event Handler
+//------------------------------------------------------------------------------
+void onDisconnectedController(ControllerPtr ctl) {
+
+  // This function is called automatically when controller disconnects
+  Serial.println("\n╔════════════════════════════════════╗");
+  Serial.println("║  CONTROLLER DISCONNECTED!          ║");
+  Serial.println("╚════════════════════════════════════╝\n");
+
+  // Clear controller reference if it matches
+  if (myController == ctl) {
+    myController = nullptr;
+  }
 }
 
 //------------------------------------------------------------------------------
@@ -92,71 +114,79 @@ void updateConnectionAnimation() {
 //*** Connection Handler Notes ***
 //********************************************************************************
 /*
- * PS3 Controller Connection:
- * 
+ * Bluepad32 Controller Connection:
+ *
  * Pairing Process:
- * 1. Controller must be paired with ESP32's Bluetooth MAC address
- * 2. Use SixAxis Pair Tool (Windows) or sixpair (Linux/Mac)
- * 3. Connect controller to computer via USB
- * 4. Use tool to set controller's master device to ESP32's MAC
- * 5. Disconnect USB, press PS button on controller
- * 6. Controller should connect to ESP32 via Bluetooth
- * 
+ * 1. Power on ESP32 and wait for "Waiting for Bluetooth controller" message
+ * 2. Put your controller in pairing mode:
+ *    - PS3/PS4/PS5: Press and hold PS + Share buttons until light flashes
+ *    - Xbox: Press and hold pairing button on top of controller
+ *    - Switch Pro: Press and hold sync button until lights flash
+ *    - 8BitDo: Refer to controller manual for pairing mode
+ * 3. Controller will automatically connect to ESP32
+ * 4. No MAC address configuration needed!
+ *
  * Connection Flow:
- * 1. User presses PS button on controller
- * 2. Controller attempts Bluetooth connection to paired device
- * 3. ESP32 receives connection request
- * 4. onConnection() callback is triggered
+ * 1. User puts controller in pairing mode
+ * 2. ESP32 detects and accepts Bluetooth connection
+ * 3. onConnectedController() callback is triggered
+ * 4. Controller reference is stored in myController variable
  * 5. Welcome animation starts (steering wiggle)
- * 6. Main loop detects connection via ps3WasConnected flag
+ * 6. Main loop detects connection via myController->isConnected()
  * 7. System becomes active and responds to controller input
- * 
+ *
  * Connection Animation:
  * - Visual confirmation that controller is connected
  * - Steering servo wiggles: Left → Center → Right → Center
  * - Total duration: 2 seconds
  * - Non-blocking (doesn't delay other operations)
  * - Can be disabled by commenting out in main loop
- * 
- * MAC Address Configuration:
- * - Set in main sketch: PS3_MAC_ADDRESS
- * - Must match your PS3 controller's paired MAC
- * - Format: "XX:XX:XX:XX:XX:XX" (colon-separated hex)
- * - Can find ESP32's MAC by adding to setup():
- *   Serial.println(WiFi.macAddress());
- * 
+ *
+ * Supported Controllers:
+ * - Sony: DualSense (PS5), DualShock 4 (PS4), DualShock 3 (PS3)
+ * - Microsoft: Xbox Wireless (Series X/S, One S)
+ * - Nintendo: Switch Pro Controller, Joy-Cons, Wii U Pro
+ * - 8BitDo: Most models
+ * - Generic: Most Bluetooth HID gamepads
+ *
  * Disconnection Handling:
- * - Detected by main loop (ps3WasConnected flag changes)
- * - Emergency stop automatically triggered
+ * - Detected by main loop (myController->isConnected() check)
+ * - onDisconnectedController() callback is triggered
+ * - Emergency stop automatically activated
  * - All motors stopped immediately
  * - System returns to waiting state
  * - Safe to power off or reconnect
- * 
+ *
  * Troubleshooting Connection Issues:
- * 
- * Controller won't connect:
- * - Verify MAC address matches in code and controller
- * - Check controller is charged
- * - Try re-pairing with SixAxis tool
+ *
+ * Controller won't pair:
+ * - Ensure controller is in pairing mode (lights flashing)
+ * - Check controller battery is charged
+ * - Try forgetting Bluetooth keys: BP32.forgetBluetoothKeys()
  * - Power cycle both controller and ESP32
- * 
+ * - Some controllers need to be unpaired from other devices first
+ *
  * Connects but doesn't respond:
  * - Check serial monitor for "CONNECTED and ACTIVE" message
- * - Verify ps3WasConnected flag is set
- * - Test with different controller if available
+ * - Verify myController is not null
+ * - Check controller model is supported
  * - Check for brownout (power issue)
- * 
+ *
  * Animation doesn't run:
  * - Check servo is connected and powered
  * - Verify steerMin/Max values are correct
  * - May indicate servo power or connection issue
- * 
- * Multiple controllers:
- * - Only one controller can be connected at a time
- * - All paired controllers will attempt to connect
- * - First to connect wins
- * - Others will fail to connect
- * 
+ *
+ * Multiple Controllers:
+ * - Bluepad32 supports up to 4 controllers simultaneously
+ * - This code uses only the first connected controller
+ * - To use multiple controllers, modify myController to an array
+ *
+ * Forgetting Paired Devices:
+ * - Call BP32.forgetBluetoothKeys() in setup to clear all pairings
+ * - Useful when switching to a new controller
+ * - Current code calls this on startup for easy pairing
+ *
  * Connection State Machine:
  * - CONN_IDLE = No animation active
  * - CONN_LEFT = Moving to left position
@@ -164,7 +194,7 @@ void updateConnectionAnimation() {
  * - CONN_RIGHT = Moving to right position
  * - CONN_CENTER_2 = Final center position
  * - CONN_DONE = Animation complete
- * 
+ *
  * The animation is non-blocking - it runs in the background
  * while the main loop continues to execute. This ensures
  * the system remains responsive during the welcome sequence.

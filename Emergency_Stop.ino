@@ -25,21 +25,18 @@ void emergencyStop() {
   digitalWrite(winchPWMChannel_2, LOW);
   
   //----------------------------------------------------------------------------
-  // Visual Alert on PS3 Controller
+  // Visual Alert on Controller
   //----------------------------------------------------------------------------
-  if (Ps3.isConnected()) {
+  if (myController && myController->isConnected()) {
     // Set to critical battery pattern (1 LED)
-    Ps3.setPlayer(LED_PATTERN_CRITICAL);
-    
+    myController->setPlayerLEDs(LED_PATTERN_CRITICAL);
+
     // Triple rumble pulse for attention
     for (int i = 0; i < 3; i++) {
-      ps3_cmd_t cmd = {};
-      cmd.rumble_left_intensity = 0xFF;   // Maximum intensity
-      cmd.rumble_right_intensity = 0xFF;
-      cmd.rumble_right_duration = 50;     // 50ms pulse
-      cmd.rumble_left_duration = 50;
-      ps3Cmd(cmd);
-      delay(100);                          // 100ms between pulses
+      // setRumble(force, duration)
+      // force: 0-255 (0xFF = max), duration: 0-255 (255 ≈ 2 seconds)
+      myController->setRumble(0xFF, 12);   // Maximum intensity, short pulse
+      delay(100);                           // 100ms between pulses
     }
   }
   

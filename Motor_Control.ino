@@ -12,9 +12,15 @@ void BLDC_move() {
   }
   lastUpdateTime = currentTime;
   
-  // Read joystick input
-  leftJoystickPos = Ps3.data.analog.stick.ly;
-  bool turboMode = Ps3.data.button.l1;
+  // Read joystick input from Bluepad32
+  // Note: Bluepad32 axis range is -511 to 512, we map to PS3 range -128 to 128
+  bool turboMode = false;
+  if (myController && myController->isConnected()) {
+    leftJoystickPos = map(myController->axisY(), -512, 512, -128, 128);
+    turboMode = myController->l1();
+  } else {
+    leftJoystickPos = 0;
+  }
   
   // Determine target speed based on joystick position and mode
   if (leftJoystickPos <= -6) {

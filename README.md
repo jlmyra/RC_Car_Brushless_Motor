@@ -11,7 +11,7 @@ RC_Vehicle_Main/
 ├── Steering_Control.ino          ← Servo steering control
 ├── Winch_Control.ino             ← Winch motor control
 ├── Battery_Monitor.ino           ← Non-blocking battery monitoring
-├── Connection_Handler.ino        ← PS3 connection & animation
+├── Connection_Handler.ino        ← Controller connection & animation
 ├── Emergency_Stop.ino            ← Safety stop function
 └── Model_Variables.h             ← Vehicle-specific configuration
 ```
@@ -81,11 +81,12 @@ Open **Model_Variables.h**:
    }
    ```
 
-### Step 4: Set PS3 MAC Address
-Open **RC_Vehicle_Main.ino**, find line ~12:
-```cpp
-#define PS3_MAC_ADDRESS "b8:27:eb:37:85:b9"  // ← Change this
-```
+### Step 4: Install Bluepad32 Library
+1. Open Arduino IDE
+2. Go to Sketch → Include Library → Manage Libraries
+3. Search for "Bluepad32"
+4. Install the latest version
+5. Restart Arduino IDE
 
 ### Step 5: Upload
 1. Connect ESP32
@@ -183,7 +184,7 @@ Open **RC_Vehicle_Main.ino**, find line ~12:
 ### D-Pad (Winch)
 - **Up** = Unwind cable
 - **Down** = Rewind cable
-- Analog pressure sensitive (gentle press = slow)
+- Digital on/off control (80% speed)
 
 ### Controller LEDs (Battery Level)
 - **4 LEDs** = Full (>8.0V)
@@ -219,8 +220,9 @@ Open **RC_Vehicle_Main.ino**, find line ~12:
 - Emergency stop at critical voltage
 
 ### Connection_Handler.ino
-- Auto-connect on PS button press
+- Auto-pairing with Bluetooth controllers
 - Welcome animation (steering wiggle)
+- Supports PS3/PS4/PS5/Xbox/Switch/8BitDo controllers
 - Non-blocking animation
 
 ### Emergency_Stop.ino
@@ -244,7 +246,9 @@ Vehicle: Sakura
 Motor Tuning - Accel: 0.15, Decel: 0.10, Boost: 33
 
 Initializing watchdog timer...
-Initializing PS3 controller... OK
+Initializing Bluepad32...
+✓ Bluepad32 initialized
+Ready to pair with any Bluetooth controller
 Configuring battery monitor...
 Configuring winch...
 Configuring steering...
@@ -252,13 +256,16 @@ Configuring motor ESC...
 Centering steering...
 
 ✓ Initialization complete
-Waiting for PS3 controller...
+Waiting for Bluetooth controller...
+Put your controller in pairing mode to connect
 
 ╔════════════════════════════════════╗
-║  PS3 CONTROLLER CONNECTED!         ║
+║  CONTROLLER CONNECTED!             ║
 ╚════════════════════════════════════╝
 
-✓✓✓ PS3 Controller is CONNECTED and ACTIVE! ✓✓✓
+Controller model: Sony DualShock 4
+
+✓✓✓ Controller is CONNECTED and ACTIVE! ✓✓✓
 
 Motor: Joy=-80 Target=5500 Speed=5450
 🔋 Battery: 7.85V ███░ (Good)
@@ -384,10 +391,20 @@ Start with:
 ## 🚗 Ready to Drive!
 
 1. Power on ESP32 with battery
-2. Wait for "Waiting for PS3 controller"
-3. Press PS button on controller
+2. Wait for "Waiting for Bluetooth controller"
+3. Put your controller in pairing mode:
+   - **PS3/PS4/PS5**: Hold PS + Share until light flashes
+   - **Xbox**: Press pairing button on top of controller
+   - **Switch Pro**: Press sync button until lights flash
+   - **8BitDo**: Refer to controller manual
 4. Watch for steering wiggle animation
 5. See "Ready to drive!" message
 6. Start driving!
+
+**Supported Controllers:**
+- Sony DualSense (PS5), DualShock 4 (PS4), DualShock 3 (PS3)
+- Microsoft Xbox Wireless (Series X/S, One S)
+- Nintendo Switch Pro, Joy-Cons
+- 8BitDo and most generic Bluetooth gamepads
 
 Enjoy your perfectly tuned RC vehicle! 🎉
