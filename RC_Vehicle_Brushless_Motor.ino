@@ -137,7 +137,7 @@ void setup() {
   // Initialize Bluepad32
   Serial.println("Initializing Bluepad32...");
   BP32.setup(&onConnectedController, &onDisconnectedController);
-  BP32.forgetBluetoothKeys();  // Start fresh - allows any controller to pair
+  // BP32.forgetBluetoothKeys();  // Temporarily disabled for testing
   Serial.println("✓ Bluepad32 initialized");
   Serial.println("Ready to pair with any Bluetooth controller");
   
